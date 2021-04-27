@@ -1,11 +1,19 @@
 package com.example;
 
+import com.example.utils.FreeMarkerRender;
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.MavenProjectHelper;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 
 /**
  * @author hdf
@@ -17,29 +25,32 @@ import org.apache.maven.project.MavenProjectHelper;
 @Mojo(name = "generate-file", defaultPhase = LifecyclePhase.GENERATE_SOURCES, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class GenerateFileMojo extends AbstractMojo {
 
+    private static final String LOG_FLAG = ">>>>>>>>>  ";
     @Parameter(property = "generate.file.skip", defaultValue = "false")
     private boolean skip;
+    @Parameter(defaultValue = "${project.build.directory}/generated-sources/fit-kms")
+    private String outputDirectory;
 
-    private Generator generator;
+    private String sourcePackagePath = "com/example/spi";
 
-    /**
-     * also {@code @Parameter(defaultValue = "${project}", readonly = true)}
-     */
-    @Component
+    @Parameter(defaultValue = "${project}", readonly = true)
     private MavenProject mavenProject;
 
-    @Component
-    private MavenProjectHelper mavenProjectHelper;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (skip) {
-            this.getLog().warn(">>>>>>>>>>>> generate-file execute test skiped");
+            this.getLog().warn(LOG_FLAG + "create sample goal skiped");
             return;
         }
+        String rendered = FreeMarkerRender.readTemplate("Test.java.tpl");
+        try {
+            FileUtils.writeStringToFile(Paths.get(outputDirectory, sourcePackagePath, "Test.java").toFile(), rendered, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new MojoExecutionException(LOG_FLAG + "create sample generated-sources fail", e);
+        }
 
-        this.getLog().warn(">>>>> getArtifactId " + mavenProject.getArtifactId());
-        this.getLog().warn(">>>>>" + mavenProjectHelper);
-        this.getLog().info(">>>>>>>>>>>> generate-file execute test ");
+        mavenProject.addCompileSourceRoot(outputDirectory);
+        this.getLog().info(LOG_FLAG + "success sample source file");
     }
 }

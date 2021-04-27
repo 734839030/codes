@@ -5,7 +5,4 @@ package com.example;
  */
 public class Generator {
 
-    public void print() {
-        System.out.println(">>>>>>>>>>>>Generator<<<<<<<<<<<<<<");
-    }
 }
