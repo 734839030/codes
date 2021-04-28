@@ -4,8 +4,9 @@ https://grpc.io/docs/languages/java/generated-code/
 
 ### 手动生成
 
-```
-# proto_path 必须，且不能和proto 同目录
-protoc --proto_path=../ --cpp_out=DST_DIR --java_out=DST_DIR --python_out=DST_DIR --go_out=DST_DIR --ruby_out=DST_DIR --objc_out=DST_DIR --csharp_out=DST_DIR proto/*
+需要安装java grpc 插件
 
+```
+再proto 目录执行
+protoc --java_out=../java --grpc-java_out=../java  --plugin=protoc-gen-grpc-java=插件路径  **/*.proto 
 ```
