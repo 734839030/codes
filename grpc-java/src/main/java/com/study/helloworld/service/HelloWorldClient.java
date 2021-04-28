@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 public class HelloWorldClient {
 
-    private static String target = "localhost:50051";
+    private static String target = "localhost:50052";
 
     private HelloWorldBlockingStub helloWorldBlockingStub;
     private HelloWorldStub helloWorldStub;

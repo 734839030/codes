@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 public class HelloWorldServer {
 
     private Server server;
-    private int port = 50051;
+    private int port = 50052;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         HelloWorldServer server = new HelloWorldServer();
