@@ -5,20 +5,12 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleStateEvent;
 
-import java.net.InetSocketAddress;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-/**
- * netty 通用处理
- */
 @io.netty.channel.ChannelHandler.Sharable
-public class NettyServerHandler extends ChannelDuplexHandler {
+public class NettyClientHandler extends ChannelDuplexHandler {
 
-    private final Map<String, Channel> channels = new ConcurrentHashMap<String, Channel>();
     private MessageDispatcher messageDispatcher;
 
-    public NettyServerHandler(MessageDispatcher messageDispatcher) {
+    public NettyClientHandler(MessageDispatcher messageDispatcher) {
         this.messageDispatcher = messageDispatcher;
     }
 
@@ -26,16 +18,14 @@ public class NettyServerHandler extends ChannelDuplexHandler {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
         Channel channel = ctx.channel();
-        channels.put(toAddressString((InetSocketAddress) ctx.channel().remoteAddress()), channel);
-        System.out.println("channelActive The connection of " + channel.remoteAddress() + " -> " + channel.localAddress() + " is established.");
+        System.out.println("channelActive The connection of " + channel.localAddress() + " -> " + channel.remoteAddress() + " is established.");
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         super.channelInactive(ctx);
         Channel channel = ctx.channel();
-        channels.remove(toAddressString((InetSocketAddress) ctx.channel().remoteAddress()));
-        System.out.println("channelInactive The connection of " + channel.remoteAddress() + " -> " + channel.localAddress() + " is disconnected.");
+        System.out.println("channelInactive The connection of " + channel.localAddress() + " -> " + channel.remoteAddress() + " is disconnected.");
         ctx.close();
     }
 
@@ -51,12 +41,8 @@ public class NettyServerHandler extends ChannelDuplexHandler {
         // server will close channel when server don't receive any heartbeat from client util timeout.
         if (evt instanceof IdleStateEvent) {
             Channel channel = ctx.channel();
-            System.out.println(" IdleStateEvent triggered, close channel " + channel);
-            try {
-                channel.close();
-            } finally {
-                channels.remove(toAddressString((InetSocketAddress) ctx.channel().remoteAddress()));
-            }
+            System.out.println("IdleStateEvent triggered, send heartbeat");
+            channel.writeAndFlush(new CommonProtocol(MessageDispatcher.CMD_PING, null));
         }
         super.userEventTriggered(ctx, evt);
     }
@@ -69,19 +55,6 @@ public class NettyServerHandler extends ChannelDuplexHandler {
         if (null == channel) {
             return;
         }
-        try {
-            channel.close();
-        } finally {
-            channels.remove(toAddressString((InetSocketAddress) channel.remoteAddress()));
-        }
-
-    }
-
-    public Map<String, Channel> getChannels() {
-        return channels;
-    }
-
-    public String toAddressString(InetSocketAddress address) {
-        return address.getAddress().getHostAddress() + ":" + address.getPort();
+        channel.close();
     }
 }

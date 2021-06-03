@@ -10,6 +10,7 @@
     <modules>
         <module>server</module>
         <module>codec</module>
+        <module>client</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -32,6 +33,11 @@
                 <version>5.8.0-M1</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>com.example</groupId>
+                <artifactId>codec</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -44,6 +50,10 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>codec</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -20,8 +20,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  */
 public class NettyServer {
 
-    private ChannelHandler encoder;
-    private ChannelHandler decoder;
+    private ChannelHandler encoder = new MessageEncoder();
+    private ChannelHandler decoder = new MessageDecoder();
     // 最好大于心跳时间的2倍
     private int idleTimeout = 60 * 1000;
     private int port = 8080;
@@ -34,9 +34,7 @@ public class NettyServer {
     private Map<String, Channel> channels;
     private Channel channel;
 
-    public NettyServer(ChannelHandler encoder, ChannelHandler decoder, int port) {
-        this.encoder = encoder;
-        this.decoder = decoder;
+    public NettyServer(int port) {
         this.port = port;
     }
 
@@ -45,16 +43,17 @@ public class NettyServer {
         // 如果 bootstrap 监听多个端口，boss线程数写对应个数，这里不是瓶颈所以一个端口一个acceptor线程
         bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory("NettyServerBoss", true));
         // 默认cpu 个数 网路通信IO等待较多，线程数量可以适当多点
-        workerGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors() * 2, new DefaultThreadFactory("NettyServerBoss", true));
-        final NettyServerHandler nettyServerHandler = new NettyServerHandler();
+        workerGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors() * 2, new DefaultThreadFactory("NettyServerWorker", true));
+        MessageDispatcher messageDispatcher = new MessageDispatcher();
+        final NettyServerHandler nettyServerHandler = new NettyServerHandler(messageDispatcher);
         channels = nettyServerHandler.getChannels();
         //  netty default option see DefaultChannelConfig
         bootstrap.group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
                 .option(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
+                .option(ChannelOption.SO_BACKLOG, 128)
                 .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
                 .childOption(ChannelOption.SO_KEEPALIVE, true)
-                .childOption(ChannelOption.SO_BACKLOG, 128)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
 
                 .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -67,9 +66,11 @@ public class NettyServer {
                     }
                 });
         // bind
-        ChannelFuture channelFuture = bootstrap.bind(port);
-        channelFuture.syncUninterruptibly();
+        ChannelFuture channelFuture = bootstrap.bind(port).syncUninterruptibly();
+        System.out.println("server started");
         channel = channelFuture.channel();
+        // 需要阻塞的可以阻塞
+        channel.closeFuture().syncUninterruptibly();
     }
 
 
@@ -78,13 +79,9 @@ public class NettyServer {
     }
 
 
-    public void doClose() throws Throwable {
-        try {
-            if (channel != null) {
-                channel.close();
-            }
-        } catch (Throwable e) {
-            e.printStackTrace();
+    public void doClose() {
+        if (channel != null) {
+            channel.close();
         }
         try {
             Collection<Channel> channels = getChannels();

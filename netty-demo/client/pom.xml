@@ -9,9 +9,9 @@
         <artifactId>netty-demo</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>codec</artifactId>
+    <artifactId>client</artifactId>
 
-    <name>codec</name>
+    <name>client</name>
 
 
 </project>
