@@ -36,13 +36,13 @@ public class NettyServerHandler extends ChannelDuplexHandler {
         Channel channel = ctx.channel();
         channels.remove(toAddressString((InetSocketAddress) ctx.channel().remoteAddress()));
         System.out.println("channelInactive The connection of " + channel.remoteAddress() + " -> " + channel.localAddress() + " is disconnected.");
-        ctx.close();
+     //   ctx.close();
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        super.channelRead(ctx, msg);
         messageDispatcher.dispatch(ctx.channel(), (CommonProtocol) msg);
+        super.channelRead(ctx, msg);
     }
 
     @Override
@@ -52,11 +52,11 @@ public class NettyServerHandler extends ChannelDuplexHandler {
         if (evt instanceof IdleStateEvent) {
             Channel channel = ctx.channel();
             System.out.println(" IdleStateEvent triggered, close channel " + channel);
-            try {
+           /* try {
                 channel.close();
             } finally {
                 channels.remove(toAddressString((InetSocketAddress) ctx.channel().remoteAddress()));
-            }
+            }*/
         }
         super.userEventTriggered(ctx, evt);
     }

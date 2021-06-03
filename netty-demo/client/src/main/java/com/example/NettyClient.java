@@ -56,26 +56,33 @@ public class NettyClient {
         });
     }
 
-    public void doConnect() {
+    public void doConnect() throws InterruptedException {
         ChannelFuture future = bootstrap.connect(new InetSocketAddress(ip, port));
         future.addListener(new ChannelFutureListener() {
 
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (future.isSuccess()) {
+                    if (null != channel) {
+                        channel.close();
+                    }
                     System.out.println("connect success host:" + ip + ",port:" + port + "");
                 } else {
                     EventLoop loop = future.channel().eventLoop();
                     loop.schedule(new Runnable() {
                         @Override
                         public void run() {
-                            NettyClient.this.doConnect();
+                            try {
+                                NettyClient.this.doConnect();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }, 10, TimeUnit.SECONDS);
                     System.out.println("connect unsuccess will try after 10s host:" + ip + ",port:" + port);
                 }
             }
-        });
+        }).sync();
         channel = future.channel();
     }
 
@@ -89,6 +96,9 @@ public class NettyClient {
     }
 
     public Channel getChannel() {
-        return channel;
+        if (channel.isActive() && channel.isOpen()) {
+            return channel;
+        }
+        return null;
     }
 }

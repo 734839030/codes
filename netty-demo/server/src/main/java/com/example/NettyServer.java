@@ -66,7 +66,7 @@ public class NettyServer {
         // bind
         ChannelFuture channelFuture = bootstrap.bind(port).syncUninterruptibly();
         System.out.println("server started");
-        channel = channelFuture.channel();
+        channel = channelFuture.awaitUninterruptibly().channel();
         // 需要阻塞的可以阻塞
         channel.closeFuture().syncUninterruptibly();
     }
