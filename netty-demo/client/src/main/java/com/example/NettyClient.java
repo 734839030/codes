@@ -21,7 +21,7 @@ public class NettyClient {
 
     private volatile Channel channel;
     private int timeout = 2000;
-    private int heartbeatInterval = 20 * 1000;
+    private int heartbeatInterval = 8 * 1000;
     private String ip;
     private int port;
 
@@ -47,9 +47,9 @@ public class NettyClient {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
 
-                ch.pipeline()//.addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
-                        .addLast("decoder", new MessageDecoder())
+                ch.pipeline()//.addLast("logging", new LoggingHandler(LogLevel.DEBUG))//for debug
                         .addLast("encoder", new MessageEncoder())
+                        .addLast("decoder", new MessageDecoder())
                         .addLast("client-idle-handler", new IdleStateHandler(heartbeatInterval, 0, 0, MILLISECONDS))
                         .addLast("handler", nettyClientHandler);
             }
@@ -57,7 +57,6 @@ public class NettyClient {
     }
 
     public void doConnect() {
-        long start = System.currentTimeMillis();
         ChannelFuture future = bootstrap.connect(new InetSocketAddress(ip, port));
         future.addListener(new ChannelFutureListener() {
 

@@ -20,8 +20,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  */
 public class NettyServer {
 
-    private ChannelHandler encoder = new MessageEncoder();
-    private ChannelHandler decoder = new MessageDecoder();
     // 最好大于心跳时间的2倍
     private int idleTimeout = 60 * 1000;
     private int port = 8080;
@@ -59,8 +57,8 @@ public class NettyServer {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
 
                     protected void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast("decoder", decoder)
-                                .addLast("encoder", encoder)
+                        ch.pipeline().addLast("decoder", new MessageDecoder())
+                                .addLast("encoder", new MessageEncoder())
                                 .addLast("server-idle-handler", new IdleStateHandler(0, 0, idleTimeout, MILLISECONDS))
                                 .addLast("handler", nettyServerHandler);
                     }

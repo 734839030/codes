@@ -2,6 +2,7 @@ package com.example;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleStateEvent;
 
@@ -35,6 +36,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
         messageDispatcher.dispatch(ctx.channel(), (CommonProtocol) msg);
     }
 
+
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         super.userEventTriggered(ctx, evt);
@@ -42,7 +44,10 @@ public class NettyClientHandler extends ChannelDuplexHandler {
         if (evt instanceof IdleStateEvent) {
             Channel channel = ctx.channel();
             System.out.println("IdleStateEvent triggered, send heartbeat");
-            channel.writeAndFlush(new CommonProtocol(MessageDispatcher.CMD_PING, null));
+            ChannelFuture channelFuture = channel.writeAndFlush(new CommonProtocol(MessageDispatcher.CMD_PING, null));
+            channelFuture.awaitUninterruptibly(2000);
+            Throwable cause = channelFuture.cause();
+            System.out.println(cause);
         }
         super.userEventTriggered(ctx, evt);
     }

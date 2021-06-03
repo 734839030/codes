@@ -1,8 +1,9 @@
 package com.example;
 
+import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CommonProtocol {
+public class CommonProtocol implements Serializable {
 
     public static final byte MAGIC = 0x12;
     public static final int FRAME_SIZE = Byte.BYTES + Integer.BYTES * 3;
