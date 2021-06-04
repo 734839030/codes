@@ -4,14 +4,26 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.AttributeKey;
+
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 @io.netty.channel.ChannelHandler.Sharable
 public class NettyClientHandler extends ChannelDuplexHandler {
 
+    public static final AttributeKey<Map<Integer, CompletableFuture<CommonProtocol>>> attributeKey = AttributeKey.valueOf("future");
     private MessageDispatcher messageDispatcher;
 
     public NettyClientHandler(MessageDispatcher messageDispatcher) {
         this.messageDispatcher = messageDispatcher;
+    }
+
+    @Override
+    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+        super.channelRegistered(ctx);
+        ctx.channel().attr(attributeKey).set(new ConcurrentHashMap<>());
     }
 
     @Override
@@ -31,8 +43,14 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        System.out.println(msg);
-        messageDispatcher.dispatch(ctx.channel(), (CommonProtocol) msg);
+        CommonProtocol commonProtocol = (CommonProtocol) msg;
+        Map<Integer, CompletableFuture<CommonProtocol>> integerCompletableFutureMap = ctx.channel().attr(attributeKey).get();
+        CompletableFuture<CommonProtocol> completableFuture = integerCompletableFutureMap.get(commonProtocol.getInvokerId());
+        if (null == completableFuture) {
+            messageDispatcher.dispatch(ctx.channel(), commonProtocol);
+        } else {
+            completableFuture.complete(commonProtocol);
+        }
     }
 
     @Override

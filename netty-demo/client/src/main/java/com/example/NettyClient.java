@@ -10,6 +10,7 @@ import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultThreadFactory;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -100,5 +101,40 @@ public class NettyClient {
             return channel;
         }
         return null;
+    }
+
+    /**
+     * 异步，不关心结果
+     *
+     * @param channel
+     * @param msg
+     */
+    public void send(Channel channel, Object msg) {
+        channel.writeAndFlush(msg);
+    }
+
+
+    public CommonProtocol send(Channel channel, CommonProtocol msg, int timeout) {
+        CompletableFuture<CommonProtocol> future = new CompletableFuture<>();
+        channel.attr(NettyClientHandler.attributeKey).get().put(msg.getInvokerId(), future);
+        try {
+            ChannelFuture channelFuture = channel.writeAndFlush(msg);
+            boolean success = channelFuture.awaitUninterruptibly(timeout);
+            if (!success) {
+                throw new RuntimeException("Failed to send message   to " + channel.remoteAddress()
+                        + " in timeout(" + timeout + "ms) error");
+            }
+            Throwable cause = channelFuture.cause();
+            if (null != cause) {
+                throw cause;
+            }
+            return future.get(timeout, MILLISECONDS);
+        } catch (Throwable throwable) {
+            throw new RuntimeException("Failed to send message   to " + channel.remoteAddress()
+                    + " cause (" + throwable.getMessage() + ") ");
+        } finally {
+            channel.attr(NettyClientHandler.attributeKey).get().remove(msg.getInvokerId());
+        }
+
     }
 }

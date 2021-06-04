@@ -1,12 +1,20 @@
 package com.example;
 
-import io.netty.channel.ChannelFuture;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 class NettyClientTest {
+
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        CompletableFuture<String> f = new CompletableFuture<>();
+        f.complete("1");
+        String s = f.get();
+        System.out.println(s);
+    }
 
     @Test
     void doOpen() throws IOException, InterruptedException {
@@ -15,8 +23,9 @@ class NettyClientTest {
         nettyClient.doConnect();
         while (true) {
             Thread.sleep(5000);
-            ChannelFuture channelFuture = nettyClient.getChannel().writeAndFlush(new CommonProtocol(MessageDispatcher.CMD_HELLO, "hello server".getBytes(StandardCharsets.UTF_8)));
-            channelFuture = channelFuture.awaitUninterruptibly();
+            nettyClient.send(nettyClient.getChannel(), new CommonProtocol(MessageDispatcher.CMD_HELLO, "hello server".getBytes(StandardCharsets.UTF_8)));
+            CommonProtocol send = nettyClient.send(nettyClient.getChannel(), new CommonProtocol(MessageDispatcher.CMD_HELLO, "hello server1".getBytes(StandardCharsets.UTF_8)), 5000);
+            System.out.println(new String(send.getBody()));
         }
     }
 }
