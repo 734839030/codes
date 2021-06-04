@@ -66,6 +66,7 @@ public class NettyClient {
                     if (null != channel) {
                         channel.close();
                     }
+                    channel = future.sync().channel();
                     System.out.println("connect success host:" + ip + ",port:" + port + "");
                 } else {
                     EventLoop loop = future.channel().eventLoop();
@@ -83,7 +84,6 @@ public class NettyClient {
                 }
             }
         }).sync();
-        channel = future.channel();
     }
 
     protected void doClose() {

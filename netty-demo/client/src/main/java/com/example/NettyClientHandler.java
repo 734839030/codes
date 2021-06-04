@@ -1,10 +1,12 @@
 package com.example;
 
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleStateEvent;
 
 @io.netty.channel.ChannelHandler.Sharable
-public class NettyClientHandler extends SimpleChannelInboundHandler<CommonProtocol> {
+public class NettyClientHandler extends ChannelDuplexHandler {
 
     private MessageDispatcher messageDispatcher;
 
@@ -24,14 +26,14 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<CommonProtoc
         super.channelInactive(ctx);
         Channel channel = ctx.channel();
         System.out.println("channelInactive The connection of " + channel.localAddress() + " -> " + channel.remoteAddress() + " is disconnected.");
-       // ctx.close();
+        // ctx.close();
     }
 
     @Override
-    public void channelRead0(ChannelHandlerContext ctx, CommonProtocol msg) throws Exception {
-        messageDispatcher.dispatch(ctx.channel(),  msg);
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        System.out.println(msg);
+        messageDispatcher.dispatch(ctx.channel(), (CommonProtocol) msg);
     }
-
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
@@ -40,10 +42,7 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<CommonProtoc
         if (evt instanceof IdleStateEvent) {
             Channel channel = ctx.channel();
             System.out.println("IdleStateEvent triggered, send heartbeat");
-          //  ChannelFuture channelFuture = channel.writeAndFlush(new CommonProtocol(MessageDispatcher.CMD_PING, null));
-            //channelFuture.awaitUninterruptibly(2000);
-            //Throwable cause = channelFuture.cause();
-            //System.out.println(cause);
+            channel.writeAndFlush(new CommonProtocol(MessageDispatcher.CMD_PING, null));
         }
         super.userEventTriggered(ctx, evt);
     }

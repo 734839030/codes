@@ -36,7 +36,7 @@ public class NettyServer {
         this.port = port;
     }
 
-    public void doOpen() {
+    public void doOpen() throws InterruptedException {
         bootstrap = new ServerBootstrap();
         // 如果 bootstrap 监听多个端口，boss线程数写对应个数，这里不是瓶颈所以一个端口一个acceptor线程
         bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory("NettyServerBoss", true));
@@ -57,7 +57,8 @@ public class NettyServer {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
 
                     protected void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast("decoder", new MessageDecoder())
+                        ch.pipeline()
+                                .addLast("decoder", new MessageDecoder())
                                 .addLast("encoder", new MessageEncoder())
                                 .addLast("server-idle-handler", new IdleStateHandler(0, 0, idleTimeout, MILLISECONDS))
                                 .addLast("handler", nettyServerHandler);
@@ -68,7 +69,7 @@ public class NettyServer {
         System.out.println("server started");
         channel = channelFuture.awaitUninterruptibly().channel();
         // 需要阻塞的可以阻塞
-        channel.closeFuture().syncUninterruptibly();
+        channel.closeFuture().sync();
     }
 
 

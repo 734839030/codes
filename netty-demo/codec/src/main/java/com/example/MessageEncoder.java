@@ -8,6 +8,7 @@ public class MessageEncoder extends MessageToByteEncoder<CommonProtocol> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, CommonProtocol msg, ByteBuf out) throws Exception {
+        out.markReaderIndex();
         out.writeByte(msg.getMagic());
         out.writeInt(msg.getCmd());
         out.writeInt(msg.getInvokerId());
@@ -15,6 +16,7 @@ public class MessageEncoder extends MessageToByteEncoder<CommonProtocol> {
         out.writeBytes(msg.getBody());
         byte[] bytes = new byte[out.writerIndex()];
         out.readBytes(bytes);
+        out.resetReaderIndex();
         out.writeInt(Crc32Util.crc32(bytes));
     }
 }

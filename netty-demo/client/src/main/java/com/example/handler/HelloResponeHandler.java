@@ -9,8 +9,7 @@ public class HelloResponeHandler implements MessageHandler {
 
     @Override
     public void received(Channel channel, CommonProtocol msg) {
-        System.out.println("received:" + new String(msg.getBody(), StandardCharsets.UTF_8));
-        msg.setBody("hello world".getBytes(StandardCharsets.UTF_8));
-        send(channel, msg);
+        System.out.println("received hello response:" + new String(msg.getBody(), StandardCharsets.UTF_8));
+        msg.getInvokerId();
     }
 }

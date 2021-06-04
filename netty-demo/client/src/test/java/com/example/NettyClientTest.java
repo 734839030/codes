@@ -10,16 +10,13 @@ class NettyClientTest {
 
     @Test
     void doOpen() throws IOException, InterruptedException {
-        NettyClient nettyClient = new NettyClient("127.0.0.1", 9000);
+        NettyClient nettyClient = new NettyClient("127.0.0.1", 9011);
         nettyClient.doOpen();
         nettyClient.doConnect();
         while (true) {
             Thread.sleep(5000);
             ChannelFuture channelFuture = nettyClient.getChannel().writeAndFlush(new CommonProtocol(MessageDispatcher.CMD_HELLO, "hello server".getBytes(StandardCharsets.UTF_8)));
-             channelFuture = channelFuture.awaitUninterruptibly();
-
-            System.out.println("success:" + channelFuture.isSuccess());
-            System.out.println("cause:" + channelFuture.cause());
+            channelFuture = channelFuture.awaitUninterruptibly();
         }
     }
 }

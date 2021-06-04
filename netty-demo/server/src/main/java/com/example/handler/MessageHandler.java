@@ -37,10 +37,9 @@ public interface MessageHandler {
             throw new RuntimeException("Failed to send message   to " + channel.remoteAddress()
                     + " cause (" + throwable.getMessage() + ") ");
         }
-        if (!success) {
+        if (sync && !success) {
             throw new RuntimeException("Failed to send message   to " + channel.remoteAddress()
                     + " in timeout(" + timeout + "ms) limit");
         }
     }
-
 }
