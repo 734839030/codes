@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class CommonProtocol implements Serializable {
 
     public static final byte MAGIC = 0x12;
+    public static final int MAX_FRAME_SIZE = 20480;
     public static final int FRAME_SIZE = Byte.BYTES + Integer.BYTES * 3;
     private static final byte[] EMPTY_BODY = new byte[0];
     private static final AtomicInteger ATOMIC_INTEGER = new AtomicInteger();
