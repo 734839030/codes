@@ -38,7 +38,10 @@ public class UserShardingAlgorithm implements StandardShardingAlgorithm<String> 
                 return each;
             }
         }
+        // 直接报错
         return null;
+        // 全部扫描
+        // return availableTargetNames;
     }
 
     /**
