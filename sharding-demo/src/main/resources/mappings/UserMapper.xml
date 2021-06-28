@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.dao.UserDao">
+    <resultMap id="BaseResultMap" type="com.example.entity.User">
+        <id column="user_id" jdbcType="VARCHAR" property="userId"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        user_id,name,create_time
+    </sql>
+
+    <sql id="Query_Table">
+        t_user
+    </sql>
+
+    <select id="findById" parameterType="String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from
+        <include refid="Query_Table"/>
+        where user_id = #{userId}
+    </select>
+
+    <select id="find" parameterType="com.example.entity.User"
+            resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from
+        <include refid="Query_Table"/>
+        <where>
+            <if test="userId != null and userId !=''">
+                and user_id = #{userId}
+            </if>
+            <if test="name != null and name != ''">
+                and name = #{name}
+            </if>
+        </where>
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="String">
+        delete t from t_user t
+        where t.user_id = #{userId}
+    </delete>
+
+    <insert id="insert" parameterType="com.example.entity.User">
+        insert into t_user
+        (user_id,name,create_time)
+        values (#{userId},#{name},#{createTime})
+    </insert>
+    <update id="update" parameterType="com.example.entity.User">
+        update t_user t set
+        t.name = #{name}
+        where t.user_id = #{userId}
+    </update>
+</mapper>
