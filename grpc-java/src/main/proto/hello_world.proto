@@ -2,6 +2,7 @@ syntax = "proto3";
 option java_package = "com.study.helloworld.proto";
 // 自动转驼峰，有需求可以自定义
 // option java_outer_classname = "HelloWorld";
+option java_multiple_files = true;
 // 其他语言自动包名转换 ，java_package 会覆盖这个
 package com.study.helloworld.proto;
 // 有复用的直接导入即可
