@@ -1,19 +1,24 @@
 package com.example;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultThreadFactory;
-
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class NettyClient {
 
@@ -33,7 +38,8 @@ public class NettyClient {
 
     public void doOpen() {
         bootstrap = new Bootstrap();
-        workerGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors() * 2, new DefaultThreadFactory("NettyServerWorker", true));
+        workerGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors() * 2,
+                new DefaultThreadFactory("NettyServerWorker", true));
         bootstrap.group(workerGroup)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.TCP_NODELAY, true)
@@ -58,16 +64,19 @@ public class NettyClient {
     }
 
     public void doConnect() throws InterruptedException {
-        ChannelFuture future = bootstrap.connect(new InetSocketAddress(ip, port));
+        ChannelFuture future = bootstrap
+                .connect(new InetSocketAddress(ip, port), new InetSocketAddress("127.0.0.1", 0));
+        ChannelFuture channelFuture = future.awaitUninterruptibly();
+        Channel channel = channelFuture.channel();
         future.addListener(new ChannelFutureListener() {
 
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (future.isSuccess()) {
-                    if (null != channel) {
-                        channel.close();
+                    if (null != NettyClient.this.channel) {
+                        NettyClient.this.channel.close();
                     }
-                    channel = future.sync().channel();
+                    NettyClient.this.channel = future.sync().channel();
                     System.out.println("connect success host:" + ip + ",port:" + port + "");
                 } else {
                     EventLoop loop = future.channel().eventLoop();
